@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import PasswordInput from "../../components/Input/PasswordInput";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../../helper";
+import axiosInstance from "../../axiosInstance";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -10,6 +11,8 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -36,6 +39,34 @@ const SignUp = () => {
     }
 
     setError("");
+
+    //signup
+    try {
+      const response = await axiosInstance.post("/create-user", {
+        name: name,
+        email: email,
+        password: password,
+      });
+
+      if (response.data && response.data.error) {
+        setError(response.data.message);
+        return;
+      }
+
+      if (response.data) {
+        navigate("/login");
+      }
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        setError(error.response.data.message);
+      } else {
+        setError("Unexpected error occurered. Please try again later");
+      }
+    }
   };
   return (
     <>

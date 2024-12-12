@@ -165,7 +165,11 @@ app.put("/edit-note/:noteId", authenticationToken, async (req, res) => {
 
     await note.save();
 
-    return res.json({ error: false, message: "Note updated successfully" });
+    return res.json({
+      error: false,
+      note,
+      message: "Note updated successfully",
+    });
   } catch (error) {
     return res
       .status(500)
@@ -241,6 +245,38 @@ app.put(
     }
   }
 );
+
+//search note
+app.get("/search-note/", authenticationToken, async (req, res) => {
+  const { user } = req.user;
+  const { query } = req.query;
+
+  if (!query) {
+    return res
+      .status(400)
+      .json({ error: true, message: "Search Query is required" });
+  }
+
+  try {
+    const machingNotes = await Note.find({
+      userId: user._id,
+      $or: [
+        { title: { $regex: new RegExp(query, "i") } },
+        { content: { $regex: new RegExp(query, "i") } },
+      ],
+    });
+
+    return res.json({
+      error: false,
+      notes: machingNotes,
+      message: "Notes matching for the search query retrieved successfully",
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: true, message: "Internal server error" });
+  }
+});
 
 app.listen(8000);
 
